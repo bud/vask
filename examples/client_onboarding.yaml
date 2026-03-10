@@ -1,0 +1,72 @@
+# Client Onboarding Workflow
+# Triggered when a new client signs on via webhook or manual trigger.
+#
+# Usage:
+#   POST /v1/workflows with this YAML parsed to JSON
+#   POST /v1/workflows/{id}/run with variables: {"client_name": "...", "client_email": "...", "package": "..."}
+
+name: Client Onboarding
+description: >
+  Automates new client setup: sends welcome email, creates workspace channels,
+  generates onboarding checklist, and schedules kickoff meeting notification.
+
+trigger: "manual"
+
+variables:
+  client_name: ""
+  client_email: ""
+  package: "starter"
+  team_channel: "#client-success"
+
+steps:
+  - id: welcome_draft
+    name: Draft welcome message
+    type: ask
+    config:
+      llm: claude
+      system_prompt: >
+        You are a professional client success assistant for Techforcement,
+        an AI consulting agency. Draft a warm, concise welcome email for a
+        new client. Include: greeting, what to expect in the first week,
+        and a link placeholder for their onboarding portal.
+        Output the email body only, no subject line.
+      text: >
+        Draft a welcome email for {{client_name}} ({{client_email}})
+        who signed up for the {{package}} package.
+
+  - id: create_channel
+    name: Create Slack channel for client
+    type: tool
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{team_channel}}"
+        text: >
+          New client onboarded: **{{client_name}}** ({{package}} package).
+          Welcome email drafted. Please review and send.
+
+  - id: onboarding_checklist
+    name: Generate onboarding checklist
+    type: ask
+    depends_on: [welcome_draft]
+    config:
+      llm: gemini
+      system_prompt: >
+        You are a project manager. Generate a structured onboarding checklist
+        as a numbered list for a new AI consulting client. Include: discovery call,
+        data audit, tool access setup, workflow design, pilot deployment, review.
+        Keep it concise — one line per item.
+      text: >
+        Create an onboarding checklist for {{client_name}} on the {{package}} package.
+
+  - id: notify_team
+    name: Notify team with checklist
+    type: tool
+    depends_on: [onboarding_checklist]
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{team_channel}}"
+        text: >
+          Onboarding checklist for {{client_name}}:
+          {{step_onboarding_checklist}}

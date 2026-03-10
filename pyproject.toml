@@ -1,7 +1,7 @@
 [project]
 name = "vask"
 version = "0.1.0"
-description = "Voice-to-Action framework — pluggable audio capture, transcription, LLM reasoning, and tool execution. Runs standalone or as an MCP server."
+description = "Enterprise-ready Voice-to-Action AI framework — automate business operations with voice input, LLM reasoning, and tool execution across Slack, Google Workspace, and databases."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

@@ -1,0 +1,55 @@
+# Weekly Report Workflow
+# Run on a schedule or manually to generate and distribute team reports.
+#
+# Usage:
+#   POST /v1/workflows with this YAML parsed to JSON
+#   POST /v1/workflows/{id}/run with variables: {"team": "...", "metrics_url": "..."}
+
+name: Weekly Report Generator
+description: >
+  Pulls key metrics, generates an executive summary via LLM,
+  and distributes the report to stakeholders on Slack.
+
+trigger: "manual"
+
+variables:
+  team: "engineering"
+  metrics_url: "https://api.example.com/metrics/weekly"
+  report_channel: "#leadership"
+
+steps:
+  - id: fetch_metrics
+    name: Fetch weekly metrics
+    type: tool
+    config:
+      tool_name: http_request
+      params:
+        method: GET
+        url: "{{metrics_url}}?team={{team}}"
+
+  - id: generate_report
+    name: Generate executive summary
+    type: ask
+    depends_on: [fetch_metrics]
+    config:
+      llm: claude
+      system_prompt: >
+        You are a business analyst at Techforcement. Given raw weekly metrics,
+        produce a concise executive summary with: key wins, areas of concern,
+        and recommended focus for next week. Use bullet points. Keep it under
+        200 words. Format for Slack (use *bold* and bullet points).
+      text: >
+        Generate a weekly report for the {{team}} team.
+        Metrics data: {{step_fetch_metrics}}
+
+  - id: distribute
+    name: Post report to Slack
+    type: tool
+    depends_on: [generate_report]
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{report_channel}}"
+        text: >
+          *Weekly Report — {{team}}*
+          {{step_generate_report}}

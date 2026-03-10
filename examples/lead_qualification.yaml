@@ -1,0 +1,62 @@
+# Lead Qualification Workflow
+# Triggered by inbound webhook (e.g., form submission, Stripe signup, or manual).
+#
+# Usage:
+#   POST /v1/workflows with this YAML parsed to JSON
+#   POST /v1/workflows/{id}/run with variables: {"lead_info": "..."}
+
+name: Lead Qualification
+description: >
+  Scores an inbound lead using LLM analysis, determines fit,
+  routes high-quality leads to sales, and updates the team.
+
+trigger: "manual"
+
+variables:
+  lead_info: ""
+  sales_channel: "#sales-pipeline"
+
+steps:
+  - id: score_lead
+    name: Score and qualify lead
+    type: ask
+    config:
+      llm: claude
+      system_prompt: >
+        You are a lead qualification assistant for Techforcement, an AI consulting
+        agency that helps businesses streamline operations. Given lead information,
+        assess fit based on: company size, industry, automation needs, budget signals,
+        and urgency. Return JSON with fields: score (1-10), tier (hot/warm/cold),
+        reasoning (1 sentence), recommended_action (1 sentence).
+      text: "Qualify this lead: {{lead_info}}"
+
+  - id: check_tier
+    name: Check if hot lead
+    type: condition
+    depends_on: [score_lead]
+    config:
+      expression: "'hot' in result.lower()"
+      input_from: score_lead
+      if_true: continue
+      if_false: continue
+
+  - id: approve_outreach
+    name: Approve outreach for hot lead
+    type: human_approval
+    depends_on: [check_tier]
+    config:
+      message: "Hot lead detected. Approve immediate outreach? Details: {{step_score_lead}}"
+
+  - id: notify_sales
+    name: Notify sales team
+    type: tool
+    depends_on: [score_lead]
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{sales_channel}}"
+        text: >
+          New lead qualified:
+          {{step_score_lead}}
+
+          Source: {{lead_info}}
