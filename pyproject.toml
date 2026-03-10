@@ -1,0 +1,40 @@
+[project]
+name = "vask"
+version = "0.1.0"
+description = "Voice-to-Action framework — pluggable audio capture, transcription, LLM reasoning, and tool execution. Runs standalone or as an MCP server."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Harish" }]
+
+dependencies = [
+    "typer>=0.15.0",
+    "rich>=13.0",
+    "tomli>=2.0; python_version < '3.12'",
+    "tomli-w>=1.0",
+    "httpx>=0.27",
+    "pydantic>=2.0",
+    "sounddevice>=0.5",
+    "numpy>=1.26",
+    "mcp>=1.0",
+    "openai>=1.50",
+    "anthropic>=0.40",
+    "google-genai>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "ruff"]
+
+[project.scripts]
+vask = "vask.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
