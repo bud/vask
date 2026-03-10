@@ -9,7 +9,6 @@ from vask.core.types import AudioChunk, Message, Query, Response, Role, Tool, To
 from vask.inputs.base import InputSource
 from vask.llm.base import LLMProvider
 from vask.outputs.base import OutputRenderer
-from vask.tools.base import ToolProvider
 from vask.tools.registry import ToolRegistry
 from vask.transcribe.base import TranscriptionProvider
 

@@ -31,6 +31,16 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "providers": {},
     "daemon": {"hotkey": "cmd+shift+v"},
     "mcp": {"transport": "stdio"},
+    "server": {
+        "host": "0.0.0.0",
+        "port": 8420,
+        "cors_origins": ["*"],
+        "log_json": False,
+    },
+    "plugins": {
+        "enabled": [],  # empty = load all discovered plugins
+        "dir": "",  # additional plugin directory
+    },
 }
 
 
@@ -60,6 +70,8 @@ class VaskConfig:
     providers: dict[str, ProviderConfig] = field(default_factory=dict)
     daemon: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_CONFIG["daemon"]))
     mcp: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_CONFIG["mcp"]))
+    server: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_CONFIG["server"]))
+    plugins: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_CONFIG["plugins"]))
 
     def get_provider(self, name: str) -> ProviderConfig:
         if name not in self.providers:
@@ -110,6 +122,8 @@ def load_config(path: Path | None = None) -> VaskConfig:
         providers=providers,
         daemon=raw.get("daemon", {}),
         mcp=raw.get("mcp", {}),
+        server=raw.get("server", DEFAULT_CONFIG["server"]),
+        plugins=raw.get("plugins", DEFAULT_CONFIG["plugins"]),
     )
 
 
@@ -163,4 +177,14 @@ hotkey = "cmd+shift+v"
 
 [mcp]
 transport = "stdio"
+
+[server]
+host = "0.0.0.0"
+port = 8420
+cors_origins = ["*"]
+log_json = false
+
+[plugins]
+enabled = []  # empty = load all discovered plugins
+# dir = "~/.config/vask/plugins"  # additional plugin directory
 """

@@ -7,7 +7,6 @@ from typing import Any
 
 from vask.config import ProviderConfig
 
-
 BLOCKED_PATTERNS = [
     "rm -rf /", "rm -rf /*", "mkfs", "dd if=", "> /dev/sd",
     ":(){ :|:& };:", "chmod -R 777 /", "curl.*|.*sh", "wget.*|.*sh",
@@ -72,5 +71,5 @@ class ShellTool:
             if errors:
                 result += f"stderr:\n{errors[:1000]}"
             return result
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return f"Command timed out after {self._timeout}s"

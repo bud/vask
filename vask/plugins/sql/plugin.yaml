@@ -1,0 +1,26 @@
+name: sql
+version: "0.1.0"
+description: >
+  Read-only SQL connector for vask. Provides tools to query databases,
+  list tables, and inspect table schemas. Currently supports SQLite via
+  aiosqlite.
+
+author: Harish
+
+dependencies:
+  - aiosqlite>=0.20
+
+tools:
+  - sql_query
+  - sql_list_tables
+  - sql_describe_table
+
+environment:
+  DATABASE_URL:
+    description: "Default database URL (e.g. sqlite:///path/to/db.sqlite3)"
+    required: false
+  VASK_SQL_CONNECTIONS:
+    description: >
+      JSON dict mapping connection names to database URLs.
+      Example: {"default": "sqlite:///app.db", "analytics": "sqlite:///analytics.db"}
+    required: false

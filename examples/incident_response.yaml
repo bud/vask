@@ -1,0 +1,62 @@
+# Example: Voice-controlled incident response workflow
+# Triggered by voice: "Check error rate on payments and scale if needed"
+#
+# Usage:
+#   POST /v1/workflows with this YAML parsed to JSON
+#   POST /v1/workflows/{id}/run with variables: {"service": "payments"}
+
+name: Incident Response
+description: >
+  Check service health, analyze the situation via LLM,
+  propose a remediation, get human approval, then execute and notify.
+
+trigger: "manual"
+
+variables:
+  service: ""
+  incident_channel: "#incidents"
+
+steps:
+  - id: check_health
+    name: Check service health
+    type: tool
+    config:
+      tool_name: http_request
+      params:
+        method: GET
+        url: "https://api.example.com/monitoring/{{service}}/health"
+
+  - id: analyze
+    name: Analyze situation
+    type: ask
+    depends_on: [check_health]
+    config:
+      llm: claude
+      system_prompt: >
+        You are an SRE assistant. Given service health data, assess severity
+        (P1-P4), identify likely root cause, and recommend immediate actions.
+        Be concise and actionable.
+      text: >
+        Service: {{service}}
+        Health check result: {{step_check_health}}
+        What's the situation and what should we do?
+
+  - id: approve
+    name: Approve remediation
+    type: human_approval
+    depends_on: [analyze]
+    config:
+      message: "Approve recommended action for {{service}}? Analysis: {{step_analyze}}"
+
+  - id: notify
+    name: Notify team
+    type: tool
+    depends_on: [approve]
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{incident_channel}}"
+        text: >
+          Incident update for {{service}}:
+          {{step_analyze}}
+          Status: Remediation approved and in progress.

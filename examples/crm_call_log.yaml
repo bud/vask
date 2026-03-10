@@ -1,0 +1,57 @@
+# Example: Voice-driven CRM call logging workflow
+# Triggered by voice: "Log call with Jane at Acme. Discussed renewal at $120K."
+#
+# Usage:
+#   POST /v1/workflows with this YAML parsed to JSON
+#   POST /v1/workflows/{id}/run with variables: {"transcript": "..."}
+
+name: CRM Call Logger
+description: >
+  Transcribes a sales call summary, extracts structured data via LLM,
+  updates the CRM, and notifies the sales channel on Slack.
+
+trigger: "manual"  # or "webhook:<webhook_id>"
+
+variables:
+  transcript: ""
+  crm_channel: "#sales-updates"
+
+steps:
+  - id: extract
+    name: Extract call details
+    type: ask
+    config:
+      llm: claude
+      system_prompt: >
+        You are a CRM data extraction assistant. Given a call transcript,
+        extract: contact_name, company, deal_value, next_steps, deal_stage.
+        Respond in JSON format only.
+      text: "Extract CRM fields from this call note: {{transcript}}"
+
+  - id: check_value
+    name: Check if high-value deal
+    type: condition
+    depends_on: [extract]
+    config:
+      expression: "'100' in result or '120' in result or '150' in result or '200' in result"
+      input_from: extract
+      if_true: continue
+      if_false: continue
+
+  - id: notify_slack
+    name: Post to Slack
+    type: tool
+    depends_on: [extract]
+    config:
+      tool_name: slack_send_message
+      params:
+        channel: "{{crm_channel}}"
+        text: "New call logged:\n{{step_extract}}"
+
+  - id: summarize
+    name: Generate summary
+    type: transform
+    depends_on: [notify_slack]
+    config:
+      expression: "result.strip()"
+      input_from: extract

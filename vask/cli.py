@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Optional
 
 import typer
 from rich.console import Console
 
-from vask.config import ensure_config, load_config
+from vask.config import ensure_config
 from vask.core.registry import register_defaults, registry
 
 app = typer.Typer(
@@ -117,13 +116,61 @@ def config() -> None:
 
     cfg = ensure_config()
     console.print(f"[bold]Config file:[/bold] {CONFIG_FILE}")
-    console.print(f"[bold]Defaults:[/bold]")
+    console.print("[bold]Defaults:[/bold]")
     for k, v in cfg.defaults.items():
         console.print(f"  {k} = {v}")
-    console.print(f"[bold]Providers:[/bold]")
+    console.print("[bold]Providers:[/bold]")
     for name, p in cfg.providers.items():
         key_status = "set" if p.api_key else "missing"
         console.print(f"  {name} ({p.type}) — key: {key_status}, model: {p.model or 'default'}")
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", "-H", help="Bind address"),
+    port: int = typer.Option(8420, "--port", "-p", help="Port number"),
+    log_json: bool = typer.Option(False, "--log-json", help="Output structured JSON logs"),
+) -> None:
+    """Start the Vask REST API server."""
+    _init()
+    cfg = ensure_config()
+
+    from vask.logging import setup_logging
+
+    setup_logging(level="INFO", json_output=log_json)
+
+    from vask.api.server import run_server
+
+    run_server(cfg, host=host, port=port)
+
+
+@app.command()
+def plugins() -> None:
+    """List available plugins and their status."""
+    _init()
+    cfg = ensure_config()
+
+    from vask.plugins.loader import PluginLoader
+    from vask.tools.registry import ToolRegistry
+
+    tool_reg = ToolRegistry()
+    loader = PluginLoader(tool_reg)
+    loaded = loader.load_all()
+
+    if not loaded:
+        console.print("[dim]No plugins found.[/dim]")
+        return
+
+    for name, plugin in loaded.items():
+        status = "[green]enabled[/green]" if plugin.enabled else "[red]disabled[/red]"
+        console.print(f"[bold]{name}[/bold] v{plugin.manifest.version} — {status}")
+        console.print(f"  {plugin.manifest.description}")
+        if plugin.tools:
+            tool_names = [t.name for t in plugin.tools]
+            console.print(f"  Tools: {', '.join(tool_names)}")
+        if plugin.errors:
+            for err in plugin.errors:
+                console.print(f"  [yellow]⚠ {err}[/yellow]")
 
 
 @app.command(name="mcp")

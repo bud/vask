@@ -1,0 +1,25 @@
+name: google_workspace
+version: "0.1.0"
+description: >
+  Google Workspace integration for Vask.  Provides Gmail, Google Calendar,
+  and Google Sheets tools that the LLM can invoke via voice commands.
+
+author: Harish
+
+tools:
+  - gmail_send_email
+  - gmail_search_emails
+  - calendar_list_events
+  - calendar_create_event
+  - sheets_read_range
+  - sheets_append_row
+
+env:
+  # Provide exactly one of the following:
+  GOOGLE_ACCESS_TOKEN: ""          # Raw OAuth2 access token
+  GOOGLE_SERVICE_ACCOUNT_JSON: ""  # Path to service-account key JSON file
+
+dependencies:
+  - httpx>=0.27
+  - PyJWT>=2.0
+  - cryptography>=41.0

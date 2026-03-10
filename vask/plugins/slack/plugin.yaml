@@ -1,0 +1,14 @@
+name: slack
+version: "0.1.0"
+description: Slack integration plugin for vask — send messages, search, react, and manage status via the Slack Web API.
+author: vask-contributors
+
+tools:
+  - slack_send_message
+  - slack_list_channels
+  - slack_search_messages
+  - slack_set_status
+  - slack_react
+
+required_env_vars:
+  - SLACK_BOT_TOKEN
