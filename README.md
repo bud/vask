@@ -121,7 +121,7 @@ Integrate Vask as tools in Claude or other MCP-compatible clients:
 | Plugin | Tools |
 |--------|-------|
 | **Slack** | Send messages, search, react, set status, list channels |
-| **Google Workspace** | Sheets, Docs, Drive, Gmail operations |
+| **Google Workspace** | Gmail, Calendar, Sheets operations |
 | **SQL** | Execute queries against SQLite, PostgreSQL, MySQL |
 
 Enable plugins via config or at runtime through the API.
